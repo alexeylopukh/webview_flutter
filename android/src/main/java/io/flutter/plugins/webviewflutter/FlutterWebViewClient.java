@@ -7,9 +7,11 @@ package io.flutter.plugins.webviewflutter;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.graphics.Bitmap;
+import android.net.http.SslError;
 import android.os.Build;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
@@ -73,7 +75,7 @@ class FlutterWebViewClient {
     }
 
     final String message =
-        String.format(Locale.getDefault(), "Could not find a string for errorCode: %d", errorCode);
+            String.format(Locale.getDefault(), "Could not find a string for errorCode: %d", errorCode);
     throw new IllegalArgumentException(message);
   }
 
@@ -83,7 +85,7 @@ class FlutterWebViewClient {
       return false;
     }
     notifyOnNavigationRequest(
-        request.getUrl().toString(), request.getRequestHeaders(), view, request.isForMainFrame());
+            request.getUrl().toString(), request.getRequestHeaders(), view, request.isForMainFrame());
     // We must make a synchronous decision here whether to allow the navigation or not,
     // if the Dart code has set a navigation delegate we want that delegate to decide whether
     // to navigate or not, and as we cannot get a response from the Dart delegate synchronously we
@@ -108,8 +110,8 @@ class FlutterWebViewClient {
     // We proceed assuming that the navigation is targeted to the main frame. If the page had any
     // frames they will be loaded in the main frame instead.
     Log.w(
-        TAG,
-        "Using a navigationDelegate with an old webview implementation, pages with frames or iframes will not work");
+            TAG,
+            "Using a navigationDelegate with an old webview implementation, pages with frames or iframes will not work");
     notifyOnNavigationRequest(url, null, view, true);
     return true;
   }
@@ -135,7 +137,7 @@ class FlutterWebViewClient {
   }
 
   private void onWebResourceError(
-      final int errorCode, final String description, final String failingUrl) {
+          final int errorCode, final String description, final String failingUrl) {
     final Map<String, Object> args = new HashMap<>();
     args.put("errorCode", errorCode);
     args.put("description", description);
@@ -145,13 +147,13 @@ class FlutterWebViewClient {
   }
 
   private void notifyOnNavigationRequest(
-      String url, Map<String, String> headers, WebView webview, boolean isMainFrame) {
+          String url, Map<String, String> headers, WebView webview, boolean isMainFrame) {
     HashMap<String, Object> args = new HashMap<>();
     args.put("url", url);
     args.put("isForMainFrame", isMainFrame);
     if (isMainFrame) {
       methodChannel.invokeMethod(
-          "navigationRequest", args, new OnNavigationRequestResult(url, headers, webview));
+              "navigationRequest", args, new OnNavigationRequestResult(url, headers, webview));
     } else {
       methodChannel.invokeMethod("navigationRequest", args);
     }
@@ -179,6 +181,11 @@ class FlutterWebViewClient {
       }
 
       @Override
+      public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+        handler.proceed();
+      }
+
+      @Override
       public void onPageStarted(WebView view, String url, Bitmap favicon) {
         FlutterWebViewClient.this.onPageStarted(view, url);
       }
@@ -191,14 +198,14 @@ class FlutterWebViewClient {
       @TargetApi(Build.VERSION_CODES.M)
       @Override
       public void onReceivedError(
-          WebView view, WebResourceRequest request, WebResourceError error) {
+              WebView view, WebResourceRequest request, WebResourceError error) {
         FlutterWebViewClient.this.onWebResourceError(
-            error.getErrorCode(), error.getDescription().toString(), request.getUrl().toString());
+                error.getErrorCode(), error.getDescription().toString(), request.getUrl().toString());
       }
 
       @Override
       public void onReceivedError(
-          WebView view, int errorCode, String description, String failingUrl) {
+              WebView view, int errorCode, String description, String failingUrl) {
         FlutterWebViewClient.this.onWebResourceError(errorCode, description, failingUrl);
       }
 
@@ -216,6 +223,12 @@ class FlutterWebViewClient {
       @Override
       public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
         return FlutterWebViewClient.this.shouldOverrideUrlLoading(view, request);
+      }
+
+
+      @Override
+      public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+        handler.proceed();
       }
 
       @Override
@@ -239,14 +252,14 @@ class FlutterWebViewClient {
       @SuppressLint("RequiresFeature")
       @Override
       public void onReceivedError(
-          WebView view, WebResourceRequest request, WebResourceErrorCompat error) {
+              WebView view, WebResourceRequest request, WebResourceErrorCompat error) {
         FlutterWebViewClient.this.onWebResourceError(
-            error.getErrorCode(), error.getDescription().toString(), request.getUrl().toString());
+                error.getErrorCode(), error.getDescription().toString(), request.getUrl().toString());
       }
 
       @Override
       public void onReceivedError(
-          WebView view, int errorCode, String description, String failingUrl) {
+              WebView view, int errorCode, String description, String failingUrl) {
         FlutterWebViewClient.this.onWebResourceError(errorCode, description, failingUrl);
       }
 
@@ -286,7 +299,7 @@ class FlutterWebViewClient {
     @Override
     public void notImplemented() {
       throw new IllegalStateException(
-          "navigationRequest must be implemented by the webview method channel");
+              "navigationRequest must be implemented by the webview method channel");
     }
 
     private void loadUrl() {
