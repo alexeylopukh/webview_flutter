@@ -181,11 +181,6 @@ class FlutterWebViewClient {
       }
 
       @Override
-      public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-        handler.proceed();
-      }
-
-      @Override
       public void onPageStarted(WebView view, String url, Bitmap favicon) {
         FlutterWebViewClient.this.onPageStarted(view, url);
       }
@@ -223,12 +218,6 @@ class FlutterWebViewClient {
       @Override
       public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
         return FlutterWebViewClient.this.shouldOverrideUrlLoading(view, request);
-      }
-
-
-      @Override
-      public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-        handler.proceed();
       }
 
       @Override
